@@ -6,7 +6,20 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
-## [Não lançado]
+## [0.1.1] — 2026-04-25
+
+### Adicionado
+- Suíte de testes com `pytest` em `tests/test_aggregator.py` cobrindo normalização de nomes de exames
+- Seção **Testes** no README
+
+### Corrigido
+- Nomes de exames com hifens Unicode (U+2010 `‐`, U+2011 `‑`, U+2013 `–`, U+2014 `—`, entre outros) agora são normalizados para hífen ASCII (`-`) antes da deduplicação, eliminando duplicatas como `25 HIDROXI-VITAMINA D` vs `25 HIDROXI‐VITAMINA D`
+- Legenda do gráfico de Evolução por Exame no dashboard: movida para abaixo do gráfico, com texto e fundo de alto contraste
+- Eixos do gráfico (datas e escala) com cor de texto visível (`#111111`) em vez de herdar a cor do tema
+
+---
+
+## [0.1.0] — inicial
 
 ### Adicionado
 - Suporte ao formato de hemograma tabular (`NOME_EXAME : VALOR UNIDADE REF`)

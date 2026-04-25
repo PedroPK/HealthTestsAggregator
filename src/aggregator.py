@@ -39,7 +39,15 @@ def build_dataframe(documents: list[ParsedDocument]) -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"])
 
     # Normalize exam names for deduplication (uppercase, collapse spaces)
-    df["exam_name_key"] = df["exam_name"].str.upper().str.strip().str.replace(r"\s+", " ", regex=True)
+    # Normalize Unicode hyphens/dashes to plain ASCII hyphen before dedup key
+    _UNICODE_HYPHENS = str.maketrans("‐‑‒–—―﹣－", "--------")
+    df["exam_name_key"] = (
+        df["exam_name"]
+        .str.upper()
+        .str.strip()
+        .apply(lambda s: s.translate(_UNICODE_HYPHENS))
+        .str.replace(r"\s+", " ", regex=True)
+    )
     df = df.sort_values(["exam_name_key", "date"]).reset_index(drop=True)
 
     # Deduplicate: keep last occurrence for same exam+date combination
