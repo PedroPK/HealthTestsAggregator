@@ -276,7 +276,7 @@ def _parse_laudo_evolutivo(full_text: str, lab: str, filename: str) -> list[Exam
             # Decide: suffix for last batch, or prefix for next exam?
             # If last data line was values-only (value_start==0), this is a suffix.
             # Otherwise, if next line has values, this is a prefix.
-            is_suffix = last_batch_values_only and last_batch_start >= 0 and len(results) > last_batch_start and not next_has_values
+            is_suffix = last_batch_values_only and last_batch_start >= 0 and len(results) > last_batch_start
             if is_suffix:
                 for j in range(last_batch_start, len(results)):
                     r = results[j]
