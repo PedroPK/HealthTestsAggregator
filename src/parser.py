@@ -103,7 +103,10 @@ _SKIP_EVO = re.compile(
     r"Nº Ficha\b|Data da F ?icha\b|Laudo Evolutivo$|Imprimir\b|Fechar$|"
     r"Eletroquimioluminescencia|C\/ jejum|S\/ jejum|"
     r"Nota:|OBS\.|Liberado em:|RECEBIDO|LIBERADO|Assinatura|"
-    r"http|ttp:/|www\.|\.asp|Página:|Praça|Av |Rua )",
+    r"http|ttp:/|www\.|.asp|Página:|Praça|Av |Rua |"
+    r"atual\s+Valores de|Resultado\s+Resultados anteriores|"
+    r"Ver resultado tradicional|Ver laudo|Valores de referência\s*$|"
+    r"Responsável Técnico|RESPONSÁVEL TÉCNICO)",
     re.IGNORECASE,
 )
 
@@ -114,8 +117,8 @@ def _is_skip_evo(line: str) -> bool:
         return True
     if _SKIP_EVO.search(s):
         return True
-    # Header lines like "28/12/2017 a+ Medicina..."
-    if re.match(r"^\d{2}/\d{2}/\d{4}\s+\w", s):
+    # Header lines like "28/12/2017 a+ Medicina..." or "09/08/12 a+ Medicina..."
+    if re.match(r"^\d{2}/\d{2}/\d{2,4}\s+\w", s):
         return True
     # Lines like "Ficha: 8050360071 Cliente: ..."
     if re.match(r"^Ficha:\s*\d", s):
@@ -227,6 +230,14 @@ def _parse_laudo_evolutivo(full_text: str, lab: str, filename: str) -> list[Exam
             full_name = re.sub(r"\s*[-]+\s*$", "", full_name).strip()
             pending_name = ""
 
+            # Skip junk names
+            if not full_name or len(full_name) < 3 or len(full_name) > 80:
+                last_batch_values_only = (value_start == 0)
+                continue
+            if _JUNK_EXAM_NAME_RE.search(full_name):
+                last_batch_values_only = (value_start == 0)
+                continue
+
             last_batch_values_only = (value_start == 0)
             batch_start = len(results)
 
@@ -265,7 +276,7 @@ def _parse_laudo_evolutivo(full_text: str, lab: str, filename: str) -> list[Exam
             # Decide: suffix for last batch, or prefix for next exam?
             # If last data line was values-only (value_start==0), this is a suffix.
             # Otherwise, if next line has values, this is a prefix.
-            is_suffix = last_batch_values_only and last_batch_start >= 0 and len(results) > last_batch_start
+            is_suffix = last_batch_values_only and last_batch_start >= 0 and len(results) > last_batch_start and not next_has_values
             if is_suffix:
                 for j in range(last_batch_start, len(results)):
                     r = results[j]
@@ -283,24 +294,19 @@ def _parse_laudo_evolutivo(full_text: str, lab: str, filename: str) -> list[Exam
                 # It's a prefix for the next exam
                 pending_name = (pending_name + " " + stripped).strip()
                 last_batch_start = -1
-            elif last_batch_start >= 0 and len(results) > last_batch_start:
-                # It's a suffix for the previous exam batch
-                for j in range(last_batch_start, len(results)):
-                    r = results[j]
-                    results[j] = ExamResult(
-                        exam_name=(r.exam_name + " " + stripped).strip(),
-                        value=r.value,
-                        unit=r.unit,
-                        reference_range=r.reference_range,
-                        date=r.date,
-                        lab=r.lab,
-                        source_file=r.source_file,
-                    )
-                last_batch_start = -1
             else:
-                # Might be a standalone prefix
+                # Pure text with no adjacent values: treat as pending prefix
+                # (Avoids incorrectly merging unrelated exam names as suffixes)
                 pending_name = (pending_name + " " + stripped).strip()
+                last_batch_start = -1
 
+    # Post-filter: remove entries with junk exam names (e.g. from suffix appending)
+    results = [
+        r for r in results
+        if r.exam_name
+        and 2 < len(r.exam_name) <= 80
+        and not _JUNK_EXAM_NAME_RE.search(r.exam_name)
+    ]
     return results
 
 
@@ -334,7 +340,12 @@ _BLOCK_META_RE = re.compile(
 # Junk exam name patterns (for post-extraction validation)
 _JUNK_EXAM_NAME_RE = re.compile(
     r"Anvisa|CRBM\d|CRF\s*\d|\bEmitido em\b|Responsável Técnico|"
-    r"Fleury S/A|\bamaissaude\b|resultados_exames|impresso em",
+    r"Fleury S/A|\bamaissaude\b|resultados_exames|impresso em|"
+    r"\bCRM\b|Aspecto,\s*urina|Pré-púberes|\bFicha:|"
+    r"nas equações|Os intervalos de referência|laudo evolutivo proporciona|"
+    r"Ver resultado tradicional|atual\s+Valores de|"
+    r"Resultado\s+Resultados anteriores|Resultado\s+Valores de|"
+    r"\bAdultos:",
     re.IGNORECASE,
 )
 
@@ -411,8 +422,12 @@ def _parse_block_format(full_text: str, lab: str, filename: str,
             if _JUNK_EXAM_NAME_RE.search(exam_name):
                 i += 1
                 continue
-            # Skip if looks like a page header starting with short date (D/M/YYYY)
-            if re.match(r'^\d{1,2}/\d{1,2}/\d{4}', exam_name):
+            # Skip if looks like a page header starting with short date (D/M/YYYY or D/M/YY)
+            if re.match(r'^\d{1,2}/\d{1,2}/\d{2,4}', exam_name):
+                i += 1
+                continue
+            # Skip if name contains embedded values+dashes (e.g. Laudo Evolutivo header row)
+            if re.search(r'\d.*-{4}|-{4}.*\d', exam_name):
                 i += 1
                 continue
 
