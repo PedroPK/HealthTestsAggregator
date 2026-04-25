@@ -102,3 +102,16 @@ exam_name | date | value_raw | value_numeric | unit | reference_range | lab | so
 ```
 
 Deduplicação: para o mesmo par `(exam_name, date)`, mantém a última ocorrência encontrada.
+
+Normalização do `exam_name`: uppercase, espaços colapsados, hifens Unicode convertidos para `-` ASCII antes da comparação.
+
+## Testes
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+| Arquivo | Cobre |
+|---|---|
+| `tests/test_aggregator.py` | Deduplicação com hifens Unicode, dedup case-insensitive, exames distintos não colapsados |
