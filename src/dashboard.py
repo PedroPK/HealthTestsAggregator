@@ -224,10 +224,35 @@ with tab1:
             xaxis_title="Data",
             yaxis_title="Valor",
             hovermode="x unified",
-            height=450,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=520,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.18,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=12, color="#111111"),
+                bgcolor="#ffffff",
+                bordercolor="#888888",
+                borderwidth=1,
+            ),
+            margin=dict(t=50, b=160),
             plot_bgcolor="#f8fbff",
             paper_bgcolor="white",
+            xaxis=dict(
+                title_font=dict(color="#111111"),
+                tickfont=dict(color="#111111"),
+                linecolor="#888888",
+                gridcolor="#dddddd",
+            ),
+            yaxis=dict(
+                title_font=dict(color="#111111"),
+                tickfont=dict(color="#111111"),
+                linecolor="#888888",
+                gridcolor="#dddddd",
+            ),
+            title_font=dict(color="#111111"),
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
