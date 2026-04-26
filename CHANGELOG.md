@@ -6,6 +6,21 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.1.2] — 2026-04-25
+
+### Adicionado
+- **Barra de progresso no dashboard**: ao clicar em Processar, exibe barra de progresso nativa do Streamlit com percentual e nome do arquivo sendo processado em tempo real
+- **Barra de progresso na CLI**: comando `process` exibe barra `tqdm` ao processar ZIPs, com percentual, velocidade e nome do arquivo atual
+- **Suíte de testes de regressão** em `tests/test_parser.py` cobrindo três cenários críticos:
+  - Todas as páginas de um PDF são lidas (proteção contra consumo prematuro do iterador `pdf.pages`)
+  - Todos os PDFs de um ZIP são processados (sem saltos silenciosos)
+  - Todos os pontos de dados por (exame, data) são preservados no DataFrame final
+
+### Dependências
+- Adicionado `tqdm>=4.66.0` ao `requirements.txt`
+
+---
+
 ## [0.1.1] — 2026-04-25
 
 ### Adicionado

@@ -7,7 +7,7 @@ Ferramenta CLI e dashboard interativo para consolidar e visualizar histórico de
 - **Parsing automático** de PDFs de múltiplos laboratórios brasileiros
 - **Consolidação** de resultados em DataFrame unificado com deduplicação
 - **Exportação** para PDF formatado e planilha Excel (tabela pivô)
-- **Dashboard interativo** (Streamlit + Plotly) para visualização de tendências ao longo do tempo
+- **Dashboard interativo** (Streamlit + Plotly) para visualização de tendências ao longo do tempo, com **barra de progresso** durante o processamento
 - Suporte a arquivos `.zip` contendo múltiplos PDFs
 
 ## Laboratórios suportados
@@ -36,6 +36,7 @@ pip install -r requirements.txt
 | `plotly` | Gráficos interativos |
 | `streamlit` | Dashboard web |
 | `openpyxl` | Exportação Excel |
+| `tqdm` | Barra de progresso no CLI |
 
 ## Uso
 
@@ -53,6 +54,12 @@ O comando gera dois arquivos em `output/`:
 - `historico_exames.pdf` — relatório formatado
 - `historico_exames.xlsx` — tabela pivô (exames × datas)
 
+A CLI exibe uma barra de progresso ao processar ZIPs:
+
+```
+Processando PDFs:  67%|███████   | 20/30 [00:53<00:26,  2.7s/arquivo, exame_2024.pdf]
+```
+
 ### Dashboard interativo
 
 ```bash
@@ -61,6 +68,7 @@ python main.py dashboard
 
 Abre o dashboard Streamlit no navegador. Permite:
 - Fazer upload de arquivo ZIP ou PDFs individuais
+- Acompanhar o progresso do processamento com barra e percentual por arquivo
 - Filtrar exames por nome
 - Visualizar gráficos de evolução temporal
 - Baixar relatório PDF gerado na interface
@@ -115,3 +123,4 @@ python -m pytest tests/ -v
 | Arquivo | Cobre |
 |---|---|
 | `tests/test_aggregator.py` | Deduplicação com hifens Unicode, dedup case-insensitive, exames distintos não colapsados |
+| `tests/test_parser.py` | Leitura de todas as páginas do PDF, processamento de todos os PDFs do ZIP, preservação de múltiplos pontos de dados por exame |
