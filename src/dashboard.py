@@ -63,23 +63,68 @@ with st.sidebar:
     )
 
     if uploaded_files and st.button("🔍 Processar", use_container_width=True):
-        with st.spinner("Extraindo dados dos PDFs..."):
-            import tempfile, os
-            all_docs = []
-            for uf in uploaded_files:
-                suffix = Path(uf.name).suffix.lower()
-                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                    tmp.write(uf.read())
-                    tmp_path = tmp.name
-                try:
-                    docs = parse_input(tmp_path)
-                    all_docs.extend(docs)
-                finally:
-                    os.unlink(tmp_path)
+        import tempfile, os, zipfile as _zipfile
+        from src.parser import parse_pdf_bytes
 
-            st.session_state.documents = all_docs
-            df = build_dataframe(all_docs)
-            st.session_state.df = df
+        # Expand uploaded files: ZIPs count as multiple PDFs
+        tasks = []  # list of (label, callable → list[ParsedDocument])
+        tmp_paths = []
+        for uf in uploaded_files:
+            suffix = Path(uf.name).suffix.lower()
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                tmp.write(uf.read())
+                tmp_path = tmp.name
+            tmp_paths.append(tmp_path)
+            if suffix == ".zip":
+                with _zipfile.ZipFile(tmp_path, "r") as zf:
+                    pdf_entries = [
+                        info for info in zf.infolist()
+                        if info.filename.lower().endswith(".pdf")
+                    ]
+                for info in pdf_entries:
+                    fname = Path(info.filename).name
+                    tasks.append((fname, tmp_path, info.filename))
+            else:
+                tasks.append((uf.name, tmp_path, None))
+
+        status_text = st.empty()
+        progress_bar = st.progress(0)
+        all_docs = []
+        n = len(tasks)
+
+        try:
+            for i, task in enumerate(tasks):
+                label, tmp_path, zip_entry = task
+                pct = int(i / n * 100)
+                status_text.markdown(
+                    f"Extraindo dados dos PDFs... **{pct}%** &nbsp;·&nbsp; `{label}`"
+                )
+                progress_bar.progress(pct)
+
+                if zip_entry is not None:
+                    with _zipfile.ZipFile(tmp_path, "r") as zf:
+                        pdf_bytes = zf.read(zip_entry)
+                    doc = parse_pdf_bytes(pdf_bytes, label)
+                    all_docs.append(doc)
+                else:
+                    from src.parser import parse_pdf_file
+                    all_docs.append(parse_pdf_file(tmp_path))
+
+            progress_bar.progress(100)
+            status_text.markdown("Extraindo dados dos PDFs... **100%**")
+        finally:
+            for p in tmp_paths:
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
+
+        progress_bar.empty()
+        status_text.empty()
+
+        st.session_state.documents = all_docs
+        df = build_dataframe(all_docs)
+        st.session_state.df = df
 
         errors = [e for d in all_docs for e in d.parse_errors]
         if errors:

@@ -13,12 +13,32 @@ from pathlib import Path
 
 
 def cmd_process(args):
-    from src.parser import parse_input
+    import zipfile
+    from pathlib import Path as _Path
+    from tqdm import tqdm
+    from src.parser import parse_input, parse_pdf_bytes
     from src.aggregator import build_dataframe, pivot_table
     from src.pdf_exporter import generate_pdf_report
 
+    input_path = _Path(args.input)
     print(f"Processando: {args.input}")
-    documents = parse_input(args.input)
+
+    if input_path.suffix.lower() == ".zip":
+        documents = []
+        with zipfile.ZipFile(input_path, "r") as zf:
+            pdf_entries = [
+                info for info in zf.infolist()
+                if info.filename.lower().endswith(".pdf")
+            ]
+            with tqdm(pdf_entries, desc="Processando PDFs", unit="arquivo", dynamic_ncols=True) as pbar:
+                for info in pbar:
+                    filename = _Path(info.filename).name
+                    pbar.set_postfix_str(filename, refresh=True)
+                    pdf_bytes = zf.read(info.filename)
+                    doc = parse_pdf_bytes(pdf_bytes, filename)
+                    documents.append(doc)
+    else:
+        documents = parse_input(input_path)
 
     total = sum(len(d.results) for d in documents)
     print(f"✓ {len(documents)} arquivo(s) processado(s) · {total} registros")
