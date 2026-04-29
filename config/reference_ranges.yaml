@@ -1,0 +1,710 @@
+# HealthTests Aggregator — Valores de Referência
+#
+# Campos obrigatórios por entrada:
+#   unit    : unidade de medida
+#   aliases : nomes como aparecem no DataFrame (uppercase, normalizado)
+#   type    : range | max_only | min_only | qualitative
+#
+# Campos opcionais:
+#   min, max : limites numéricos
+#   note     : observação (ex: "Masculino", "Em jejum")
+#   zones    : faixas coloridas para o gráfico de análise
+#     - label : nome da faixa
+#       color : cor hexadecimal
+#       min   : limite inferior (omitir = faixa aberta à esquerda)
+#       max   : limite superior (omitir = faixa aberta à direita)
+#
+# Para editar interativamente: python update_references.py
+# AVISO: comentários são removidos ao salvar pelo script de atualização.
+
+# ── Metabolismo da Glicose ──────────────────────────────────────────────────
+
+GLICOSE:
+  unit: mg/dL
+  aliases:
+    - GLICOSE
+  type: range
+  min: 70.0
+  max: 99.0
+  note: "Em jejum"
+  zones:
+    - label: "Hipoglicemia"
+      color: "#d62728"
+      max: 70.0
+    - label: "Normal"
+      color: "#2ca02c"
+      min: 70.0
+      max: 99.0
+    - label: "Pré-diabético"
+      color: "#ff7f0e"
+      min: 100.0
+      max: 125.0
+    - label: "Diabético"
+      color: "#d62728"
+      min: 126.0
+
+HEMOGLOBINA GLICADA:
+  unit: "%"
+  aliases:
+    - HEMOGLOBINA GLICADA
+  type: range
+  min: 4.0
+  max: 5.7
+  zones:
+    - label: "Normal"
+      color: "#2ca02c"
+      max: 5.7
+    - label: "Pré-diabético"
+      color: "#ff7f0e"
+      min: 5.7
+      max: 6.4
+    - label: "Diabético"
+      color: "#d62728"
+      min: 6.5
+
+INSULINA:
+  unit: mU/L
+  aliases:
+    - INSULINA
+  type: range
+  min: 2.0
+  max: 25.0
+  note: "Em jejum"
+
+FRUTOSAMINA:
+  unit: micromol/L
+  aliases:
+    - FRUTOSAMINA
+  type: range
+  min: 205.0
+  max: 285.0
+
+# ── Lipidograma ──────────────────────────────────────────────────────────────
+
+COLESTEROL TOTAL:
+  unit: mg/dL
+  aliases:
+    - COLESTEROL TOTAL
+  type: max_only
+  max: 200.0
+  zones:
+    - label: "Desejável"
+      color: "#2ca02c"
+      max: 200.0
+    - label: "Limítrofe"
+      color: "#ff7f0e"
+      min: 200.0
+      max: 239.0
+    - label: "Alto"
+      color: "#d62728"
+      min: 240.0
+
+LDL-COLESTEROL:
+  unit: mg/dL
+  aliases:
+    - LDL-COLESTEROL
+    - LDLCOLESTEROL
+  type: max_only
+  max: 100.0
+  zones:
+    - label: "Ótimo"
+      color: "#1f77b4"
+      max: 100.0
+    - label: "Desejável"
+      color: "#2ca02c"
+      min: 100.0
+      max: 129.0
+    - label: "Limítrofe"
+      color: "#ff7f0e"
+      min: 130.0
+      max: 159.0
+    - label: "Alto"
+      color: "#d62728"
+      min: 160.0
+      max: 189.0
+    - label: "Muito Alto"
+      color: "#8c0000"
+      min: 190.0
+
+HDL-COLESTEROL:
+  unit: mg/dL
+  aliases:
+    - HDL-COLESTEROL
+    - HDLCOLESTEROL
+  type: min_only
+  min: 40.0
+  note: "Masculino"
+  zones:
+    - label: "Baixo"
+      color: "#d62728"
+      max: 40.0
+    - label: "Normal"
+      color: "#ff7f0e"
+      min: 40.0
+      max: 59.0
+    - label: "Ótimo"
+      color: "#2ca02c"
+      min: 60.0
+
+VLDL-COLESTEROL:
+  unit: mg/dL
+  aliases:
+    - VLDL-COLESTEROL
+    - VLDLCOLESTEROL
+  type: max_only
+  max: 30.0
+
+TRIGLICERIDES:
+  unit: mg/dL
+  aliases:
+    - TRIGLICERIDES
+    - TRIGLICÉRIDES
+  type: max_only
+  max: 150.0
+  zones:
+    - label: "Normal"
+      color: "#2ca02c"
+      max: 150.0
+    - label: "Limítrofe"
+      color: "#ff7f0e"
+      min: 150.0
+      max: 199.0
+    - label: "Alto"
+      color: "#d62728"
+      min: 200.0
+      max: 499.0
+    - label: "Muito Alto"
+      color: "#8c0000"
+      min: 500.0
+
+COLESTEROL NÃO-HDL:
+  unit: mg/dL
+  aliases:
+    - COLESTEROL NÃO-HDL
+    - COLESTEROL NÃO-HDL, SORO
+    - COLESTEROL NÃOHDL, SORO
+    - NÃO-HDL-COLESTEROL
+    - NÃOHDLCOLESTEROL
+  type: max_only
+  max: 130.0
+
+LIPOPROTEINA LP(A):
+  unit: mg/dL
+  aliases:
+    - LIPOPROTEINA LP(A)
+  type: range
+  min: 5.6
+  max: 33.8
+
+# ── Hemograma ────────────────────────────────────────────────────────────────
+
+HEMOGLOBINA:
+  unit: g/dL
+  aliases:
+    - HEMOGLOBINA
+  type: range
+  min: 13.5
+  max: 17.5
+  note: "Masculino"
+
+HEMATÓCRITO:
+  unit: "%"
+  aliases:
+    - HEMATÓCRITO
+  type: range
+  min: 39.0
+  max: 50.0
+  note: "Masculino"
+
+ERITRÓCITOS:
+  unit: milhões/mm3
+  aliases:
+    - ERITRÓCITOS
+  type: range
+  min: 4.30
+  max: 5.70
+  note: "Masculino"
+
+VCM:
+  unit: fL
+  aliases:
+    - VCM
+  type: range
+  min: 81.0
+  max: 95.0
+
+HCM:
+  unit: pg
+  aliases:
+    - HCM
+    - HEMOGLOBINA CORPUSCULAR MÉDIA
+  type: range
+  min: 26.0
+  max: 34.0
+
+CHCM:
+  unit: g/dL
+  aliases:
+    - CHCM
+    - CONCENTRAÇÃO DE HEMOGLOBINA
+  type: range
+  min: 31.0
+  max: 36.0
+
+RDW:
+  unit: "%"
+  aliases:
+    - RDW
+    - CORPUSCULAR RDW
+  type: range
+  min: 11.8
+  max: 15.6
+
+PLAQUETAS:
+  unit: /mm3
+  aliases:
+    - PLAQUETAS
+  type: range
+  min: 150000.0
+  max: 450000.0
+
+VOLUME PLAQUETÁRIO MÉDIO:
+  unit: fL
+  aliases:
+    - VOLUME PLAQUETÁRIO MÉDIO
+  type: range
+  min: 9.2
+  max: 12.6
+
+LEUCÓCITOS:
+  unit: /mm3
+  aliases:
+    - LEUCÓCITOS
+  type: range
+  min: 3500.0
+  max: 10500.0
+
+NEUTRÓFILOS:
+  unit: /mm3
+  aliases:
+    - NEUTRÓFILOS
+  type: range
+  min: 1700.0
+  max: 8000.0
+
+LINFÓCITOS:
+  unit: /mm3
+  aliases:
+    - LINFÓCITOS
+  type: range
+  min: 900.0
+  max: 2900.0
+
+MONÓCITOS:
+  unit: /mm3
+  aliases:
+    - MONÓCITOS
+  type: range
+  min: 300.0
+  max: 900.0
+
+EOSINÓFILOS:
+  unit: /mm3
+  aliases:
+    - EOSINÓFILOS
+  type: range
+  min: 50.0
+  max: 500.0
+
+BASÓFILOS:
+  unit: /mm3
+  aliases:
+    - BASÓFILOS
+  type: range
+  min: 0.0
+  max: 100.0
+
+VHS:
+  unit: mm/h
+  aliases:
+    - VHS
+  type: max_only
+  max: 8.0
+  note: "Masculino"
+
+# ── Função Hepática ──────────────────────────────────────────────────────────
+
+ALT (TGP):
+  unit: U/L
+  aliases:
+    - ALT (TGP)
+    - ALANINA AMINO TRANSFERASE (ALT), ATIVIDADE NO SORO
+  type: max_only
+  max: 41.0
+  note: "Masculino"
+
+AST (TGO):
+  unit: U/L
+  aliases:
+    - AST (TGO)
+    - ASPARTATO AMINO TRANSFERASE (AST), ATIVIDADE NO SORO
+  type: max_only
+  max: 37.0
+  note: "Masculino"
+
+GAMA-GT:
+  unit: U/L
+  aliases:
+    - GAMA-GT
+    - GAMAGT
+    - GAMA GLUTAMIL TRANSFERASE (GAMA-GT)
+  type: range
+  min: 12.0
+  max: 73.0
+  note: "Masculino"
+
+ALBUMINA:
+  unit: g/dL
+  aliases:
+    - ALBUMINA
+  type: range
+  min: 3.5
+  max: 5.2
+
+FOSFATASE ALCALINA:
+  unit: U/L
+  aliases:
+    - FOSFATASE ALCALINA
+    - FOSFATASE ALCALINA (ALP)
+  type: range
+  min: 40.0
+  max: 129.0
+
+DESIDROGENASE LACTICA:
+  unit: U/L
+  aliases:
+    - DESIDROGENASE LACTICA (DHL)
+  type: range
+  min: 240.0
+  max: 480.0
+
+AMILASE:
+  unit: U/L
+  aliases:
+    - AMILASE
+  type: range
+  min: 28.0
+  max: 100.0
+
+LIPASE:
+  unit: U/L
+  aliases:
+    - LIPASE
+  type: max_only
+  max: 60.0
+
+FIBRINOGENIO:
+  unit: mg/dL
+  aliases:
+    - FIBRINOGENIO
+  type: range
+  min: 200.0
+  max: 400.0
+
+TEMPO DE PROTROMBINA:
+  unit: segundos
+  aliases:
+    - TEMPO DE PROTROMBINA
+  type: range
+  min: 12.7
+  max: 15.2
+
+# ── Função Renal ─────────────────────────────────────────────────────────────
+
+CREATININA:
+  unit: mg/dL
+  aliases:
+    - CREATININA
+  type: range
+  min: 0.7
+  max: 1.3
+  note: "Masculino"
+
+UREIA:
+  unit: mg/dL
+  aliases:
+    - UREIA
+    - URÉIA
+  type: range
+  min: 10.0
+  max: 50.0
+
+PTH:
+  unit: pg/mL
+  aliases:
+    - PTH
+    - PARATORMONIO (PTH), MOLECULA INTACTA
+  type: range
+  min: 10.0
+  max: 65.0
+
+# ── Tireoide ─────────────────────────────────────────────────────────────────
+
+TSH:
+  unit: mUI/L
+  aliases:
+    - TSH
+    - HORMONIO TIROESTIMULANTE (TSH)
+    - HORMÔNIO TIROESTIMULANTE
+  type: range
+  min: 0.45
+  max: 4.5
+
+T4 LIVRE:
+  unit: ng/dL
+  aliases:
+    - T4 LIVRE
+    - TIROXINA (T4) LIVRE
+  type: range
+  min: 0.9
+  max: 1.7
+
+T3 LIVRE:
+  unit: ng/dL
+  aliases:
+    - T3 LIVRE
+    - TRIIODOTIRONINA (T3) LIVRE
+  type: range
+  min: 0.24
+  max: 0.37
+
+T3 REVERSO:
+  unit: ng/dL
+  aliases:
+    - T3 REVERSO
+  type: range
+  min: 8.0
+  max: 25.0
+
+ANTI-TIROPEROXIDASE:
+  unit: U/mL
+  aliases:
+    - ANTI-TIROPEROXIDASE
+    - ANTICORPOS ANTI-PEROXIDASE TIROIDIANA
+  type: max_only
+  max: 35.0
+
+ANTI-TIROGLOBULINA:
+  unit: UI/mL
+  aliases:
+    - ANTI-TIROGLOBULINA
+    - ANTICORPOS ANTI-TIROGLOBULINA
+  type: max_only
+  max: 115.0
+
+# ── Eletrólitos e Minerais ───────────────────────────────────────────────────
+
+SÓDIO:
+  unit: mEq/L
+  aliases:
+    - SÓDIO
+    - SODIO
+  type: range
+  min: 136.0
+  max: 145.0
+
+POTÁSSIO:
+  unit: mEq/L
+  aliases:
+    - POTÁSSIO
+    - POTASSIO
+  type: range
+  min: 3.5
+  max: 5.1
+
+CÁLCIO:
+  unit: mg/dL
+  aliases:
+    - CÁLCIO
+    - CALCIO
+  type: range
+  min: 8.6
+  max: 10.3
+
+MAGNÉSIO:
+  unit: mg/dL
+  aliases:
+    - MAGNÉSIO
+    - MAGNESIO
+  type: range
+  min: 1.6
+  max: 2.6
+
+CLORO:
+  unit: mEq/L
+  aliases:
+    - CLORO
+  type: range
+  min: 98.0
+  max: 107.0
+
+FERRO:
+  unit: microg/dL
+  aliases:
+    - FERRO
+  type: range
+  min: 65.0
+  max: 175.0
+
+FERRITINA:
+  unit: microg/L
+  aliases:
+    - FERRITINA
+  type: range
+  min: 36.0
+  max: 262.0
+  note: "Masculino"
+
+ZINCO:
+  unit: microgramas/mL
+  aliases:
+    - ZINCO
+  type: range
+  min: 0.5
+  max: 1.1
+
+FOSFORO INORGANICO:
+  unit: mg/dL
+  aliases:
+    - FOSFORO INORGANICO
+  type: range
+  min: 2.5
+  max: 4.5
+
+HOMOCISTEÍNA:
+  unit: micromoles/L
+  aliases:
+    - HOMOCISTEÍNA
+    - HOMOCISTEINA
+  type: range
+  min: 5.0
+  max: 14.0
+
+# ── Vitaminas ────────────────────────────────────────────────────────────────
+
+VITAMINA D (25-OH):
+  unit: ng/mL
+  aliases:
+    - 25 HIDROXI-VITAMINA D
+  type: range
+  min: 30.0
+  max: 60.0
+  zones:
+    - label: "Deficiência"
+      color: "#d62728"
+      max: 20.0
+    - label: "Insuficiência"
+      color: "#ff7f0e"
+      min: 20.0
+      max: 29.9
+    - label: "Normal"
+      color: "#2ca02c"
+      min: 30.0
+      max: 60.0
+    - label: "Toxicidade potencial"
+      color: "#8c0000"
+      min: 150.0
+
+VITAMINA B12:
+  unit: ng/L
+  aliases:
+    - VITAMINA B12
+    - VITAMINA B-12
+  type: min_only
+  min: 300.0
+  zones:
+    - label: "Deficiente"
+      color: "#d62728"
+      max: 200.0
+    - label: "Insuficiente"
+      color: "#ff7f0e"
+      min: 200.0
+      max: 299.0
+    - label: "Normal"
+      color: "#2ca02c"
+      min: 300.0
+
+ÁCIDO FÓLICO:
+  unit: ng/mL
+  aliases:
+    - ACIDO FOLICO
+    - ÁCIDO FÓLICO ELETROQUIMIOLUMINESCÊNCIA
+  type: min_only
+  min: 4.6
+
+# ── Hormônios ────────────────────────────────────────────────────────────────
+
+TESTOSTERONA TOTAL:
+  unit: ng/dL
+  aliases:
+    - TESTOSTERONA
+  type: range
+  min: 300.0
+  max: 1000.0
+  note: "Masculino adulto"
+
+DHEA-S:
+  unit: microg/dL
+  aliases:
+    - DHEA-S
+    - SULFATO DE DEHIDROEPIANDROSTERONA (DHEA-S)
+  type: range
+  min: 160.0
+  max: 492.0
+  note: "Masculino 20-29 anos"
+
+DIHIDROTESTOSTERONA:
+  unit: ng/dL
+  aliases:
+    - DIHIDROTESTOSTERONA
+    - DIHIDROTESTOSTERONA (DHT)
+  type: range
+  min: 25.0
+  max: 100.0
+  note: "Masculino"
+
+FSH:
+  unit: UI/L
+  aliases:
+    - FSH
+    - HORMONIO FOLICULO ESTIMULANTE (FSH)
+  type: max_only
+  max: 10.0
+  note: "Masculino adulto"
+
+LH:
+  unit: UI/L
+  aliases:
+    - HORMONIO LUTEINIZANTE (LH)
+  type: max_only
+  max: 9.0
+  note: "Masculino adulto"
+
+IGFBP-3:
+  unit: ng/mL
+  aliases:
+    - IGFBP-3
+    - IGFBP3
+  type: range
+  min: 3500.0
+  max: 7400.0
+
+ÁCIDO ÚRICO:
+  unit: mg/dL
+  aliases:
+    - ACIDO URICO
+    - ÁCIDO ÚRICO, SORO
+  type: range
+  min: 3.4
+  max: 7.0
+  note: "Masculino"

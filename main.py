@@ -72,6 +72,16 @@ def cmd_process(args):
 
 def cmd_dashboard(args):
     import subprocess
+
+    config_path = Path(__file__).parent / "config" / "reference_ranges.yaml"
+    if not config_path.exists():
+        print("⚠  Arquivo de valores de referência não encontrado.")
+        print(f"   Esperado em: {config_path}\n")
+        answer = input("Deseja configurar os valores de referência agora? [S/n] ").strip().lower()
+        if answer != "n":
+            update_script = Path(__file__).parent / "update_references.py"
+            subprocess.run([sys.executable, str(update_script)])
+
     dashboard_path = Path(__file__).parent / "src" / "dashboard.py"
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(dashboard_path)])
 

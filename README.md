@@ -6,8 +6,9 @@ Ferramenta CLI e dashboard interativo para consolidar e visualizar histórico de
 
 - **Parsing automático** de PDFs de múltiplos laboratórios brasileiros
 - **Consolidação** de resultados em DataFrame unificado com deduplicação
+- **Valores de referência configuráveis** por tipo de exame, com suporte a faixas coloridas (zonas clínicas)
 - **Exportação** para PDF formatado e planilha Excel (tabela pivô)
-- **Dashboard interativo** (Streamlit + Plotly) para visualização de tendências ao longo do tempo, com **barra de progresso** durante o processamento
+- **Dashboard interativo** (Streamlit + Plotly) com aba de análise por exame, barra de progresso e filtros
 - Suporte a arquivos `.zip` contendo múltiplos PDFs
 
 ## Laboratórios suportados
@@ -37,6 +38,7 @@ pip install -r requirements.txt
 | `streamlit` | Dashboard web |
 | `openpyxl` | Exportação Excel |
 | `tqdm` | Barra de progresso no CLI |
+| `pyyaml` | Leitura do arquivo de valores de referência |
 
 ## Uso
 
@@ -78,13 +80,17 @@ Abre o dashboard Streamlit no navegador. Permite:
 ```
 HealthTestsAggregator/
 ├── main.py                 # Ponto de entrada CLI
+├── update_references.py    # Script interativo de edição de valores de referência
 ├── requirements.txt
+├── config/
+│   └── reference_ranges.yaml # Valores de referência por tipo de exame
 ├── input/                  # Pasta sugerida para arquivos de entrada
 ├── output/                 # Saídas geradas (PDF, Excel)
 └── src/
     ├── models.py           # Dataclasses ExamResult e ParsedDocument
     ├── parser.py           # Extração e parsing de PDFs
     ├── aggregator.py       # Consolidação em DataFrame e tabela pivô
+    ├── reference.py        # Loader de valores de referência
     ├── pdf_exporter.py     # Geração de relatório PDF
     └── dashboard.py        # Dashboard Streamlit
 ```
@@ -112,6 +118,25 @@ exam_name | date | value_raw | value_numeric | unit | reference_range | lab | so
 Deduplicação: para o mesmo par `(exam_name, date)`, mantém a última ocorrência encontrada.
 
 Normalização do `exam_name`: uppercase, espaços colapsados, hifens Unicode convertidos para `-` ASCII antes da comparação.
+
+## Valores de Referência
+
+Os valores de referência ficam em `config/reference_ranges.yaml`. Cada entrada define:
+
+| Campo | Descrição |
+|---|---|
+| `unit` | Unidade de medida |
+| `aliases` | Nomes alternativos como aparecem nos PDFs |
+| `type` | `range` \| `max_only` \| `min_only` \| `qualitative` |
+| `min`, `max` | Limites numéricos |
+| `note` | Observação (ex: "Masculino", "Em jejum") |
+| `zones` | Faixas coloridas para visualização (label, color hex, min, max) |
+
+Para editar interativamente:
+
+```bash
+python update_references.py
+```
 
 ## Testes
 

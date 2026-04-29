@@ -19,6 +19,7 @@ import plotly.express as px
 from src.parser import parse_input
 from src.aggregator import build_dataframe, pivot_table, list_exams
 from src.pdf_exporter import generate_pdf_report
+from src.reference import load_references, get_reference
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -218,7 +219,7 @@ st.markdown("---")
 # Tabs
 # ---------------------------------------------------------------------------
 
-tab1, tab2, tab3 = st.tabs(["📊 Evolução por Exame", "📋 Tabela Completa", "ℹ️ Dados Brutos"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Evolução por Exame", "📋 Tabela Completa", "ℹ️ Dados Brutos", "🔬 Análise por Exame"])
 
 # ── Tab 1: Exam evolution chart ──────────────────────────────────────────────
 with tab1:
@@ -325,3 +326,152 @@ with tab3:
         with st.expander(f"⚠️ Erros de parse ({len(errors)})"):
             for e in errors:
                 st.text(e)
+
+# ── Tab 4: Análise por Exame com Valores de Referência ───────────────────────
+with tab4:
+    st.subheader("🔬 Análise por Exame")
+
+    _config_path = Path(__file__).parent.parent / "config" / "reference_ranges.yaml"
+    refs = load_references()
+    if not _config_path.exists():
+        st.error(
+            "⚠️ Arquivo de valores de referência não encontrado.  \n"
+            f"Esperado em: `{_config_path}`  \n\n"
+            "Execute no terminal para configurar:\n"
+            "```\npython update_references.py\n```"
+        )
+
+    exam_names = sorted(df["exam_name"].unique().tolist())
+    exams_with_ref = {e for e in exam_names if get_reference(e, refs) is not None}
+
+    selected_exam = st.selectbox(
+        "Selecione o exame",
+        options=exam_names,
+        format_func=lambda x: f"✓  {x}" if x in exams_with_ref else f"○  {x}",
+    )
+
+    exam_df = df[df["exam_name"] == selected_exam].sort_values("date")
+    numeric = exam_df.dropna(subset=["value_numeric"])
+    ref = get_reference(selected_exam, refs)
+
+    if numeric.empty:
+        st.warning("Este exame não possui valores numéricos para exibição gráfica.")
+    else:
+        # ── Compute display y-range ──────────────────────────────────────────
+        data_min = numeric["value_numeric"].min()
+        data_max = numeric["value_numeric"].max()
+        data_span = max(data_max - data_min, abs(data_max) * 0.1, 1.0)
+        y_low  = data_min - data_span * 0.35
+        y_high = data_max + data_span * 0.35
+        if ref:
+            if ref.min is not None:
+                y_low  = min(y_low,  ref.min - data_span * 0.15)
+            if ref.max is not None:
+                y_high = max(y_high, ref.max + data_span * 0.15)
+
+        fig = go.Figure()
+
+        # ── Reference zones or lines ─────────────────────────────────────────
+        if ref and ref.zones:
+            for zone in ref.zones:
+                z_min = max(zone.min if zone.min is not None else y_low,  y_low)
+                z_max = min(zone.max if zone.max is not None else y_high, y_high)
+                if z_max <= z_min:
+                    continue
+                fig.add_hrect(
+                    y0=z_min, y1=z_max,
+                    fillcolor=zone.color,
+                    opacity=0.18,
+                    layer="below",
+                    line_width=0,
+                    annotation_text=zone.label,
+                    annotation_position="top right",
+                    annotation_font=dict(size=11, color="#555555"),
+                )
+        elif ref:
+            if ref.min is not None:
+                fig.add_hline(
+                    y=ref.min, line_dash="dash", line_color="#2ca02c", line_width=1.5,
+                    annotation_text=f"Mín: {ref.min}",
+                    annotation_position="bottom right",
+                    annotation_font=dict(color="#2ca02c"),
+                )
+            if ref.max is not None:
+                fig.add_hline(
+                    y=ref.max, line_dash="dash", line_color="#d62728", line_width=1.5,
+                    annotation_text=f"Máx: {ref.max}",
+                    annotation_position="top right",
+                    annotation_font=dict(color="#d62728"),
+                )
+
+        # ── Data trace ───────────────────────────────────────────────────────
+        unit_label = (
+            ref.unit if ref
+            else (exam_df["unit"].dropna().iloc[0] if not exam_df["unit"].dropna().empty else "")
+        )
+        fig.add_trace(go.Scatter(
+            x=numeric["date"],
+            y=numeric["value_numeric"],
+            mode="lines+markers",
+            name=selected_exam,
+            marker=dict(size=9, color="#1f77b4", line=dict(width=1.5, color="white")),
+            line=dict(width=2.5, color="#1f77b4"),
+            hovertemplate=(
+                "<b>%{x|%d/%m/%Y}</b><br>"
+                f"Valor: %{{y}} {unit_label}<br>"
+                "<extra></extra>"
+            ),
+        ))
+
+        fig.update_layout(
+            title=dict(text=f"<b>{selected_exam}</b>", font=dict(color="#111111", size=16)),
+            xaxis_title="Data",
+            yaxis_title=unit_label,
+            height=480,
+            hovermode="x unified",
+            plot_bgcolor="#f8fbff",
+            paper_bgcolor="white",
+            xaxis=dict(
+                title_font=dict(color="#111111"),
+                tickfont=dict(color="#111111"),
+                gridcolor="#dddddd",
+            ),
+            yaxis=dict(
+                title_font=dict(color="#111111"),
+                tickfont=dict(color="#111111"),
+                gridcolor="#dddddd",
+                range=[y_low, y_high],
+            ),
+            margin=dict(t=60, r=130, b=60, l=70),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # ── Reference info card ──────────────────────────────────────────────
+        if ref:
+            note_str = f" · {ref.note}" if ref.note else ""
+            st.info(
+                f"**Referência ({ref.canonical_name}):** {ref.summary()}{note_str}  "
+                f"{'· ' + str(len(ref.zones)) + ' faixas configuradas' if ref.zones else ''}"
+            )
+        else:
+            st.caption(
+                "⚙️ Nenhum valor de referência configurado para este exame. "
+                "Execute `python update_references.py` para adicionar."
+            )
+
+        # ── Data table ───────────────────────────────────────────────────────
+        with st.expander(f"📋 Todos os registros ({len(exam_df)})"):
+            st.dataframe(
+                exam_df[
+                    ["date", "value_raw", "unit", "reference_range", "lab", "source_file"]
+                ].assign(date=exam_df["date"].dt.strftime("%d/%m/%Y"))
+                .rename(columns={
+                    "date": "Data",
+                    "value_raw": "Valor",
+                    "unit": "Unidade",
+                    "reference_range": "Ref. PDF",
+                    "lab": "Laboratório",
+                    "source_file": "Arquivo",
+                }),
+                use_container_width=True,
+            )

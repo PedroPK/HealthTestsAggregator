@@ -6,6 +6,25 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.2.0] — 2026-04-29
+
+### Adicionado
+- **`config/reference_ranges.yaml`**: arquivo de parametrização com valores de referência para 55+ tipos de exame, organizado por categoria médica (lipidograma, hemograma, função hepática, tireoidiana, eletrólitos, vitaminas, hormônios etc.)
+- **`src/reference.py`**: módulo de leitura e lookup dos valores de referência; suporta tipos `range`, `max_only`, `min_only` e `qualitative`; suporte a aliases para mapear nomes alternativos de PDFs ao mesmo exame
+- **`update_references.py`**: script interativo de linha de comando para adicionar, editar e remover valores de referência sem editar o YAML manualmente
+- **Aba "🔬 Análise por Exame" no dashboard**: nova aba que exibe, para o exame selecionado:
+  - Gráfico de linha + pontos de todas as amostras históricas
+  - Faixas coloridas (zonas) quando configuradas (ex: Normal / Pré-diabético / Diabético para glicose)
+  - Linhas de mínimo/máximo tracejadas quando sem zonas
+  - Card de informação com o valor de referência e observação
+  - Tabela expansiva com todos os registros do exame selecionado
+  - Indicador `✓` ou `○` no seletor de exame conforme referência configurada ou não
+
+### Dependências
+- Adicionado `pyyaml>=6.0.0` ao `requirements.txt`
+
+---
+
 ## [0.1.2] — 2026-04-25
 
 ### Adicionado
