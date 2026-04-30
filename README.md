@@ -75,6 +75,40 @@ Abre o dashboard Streamlit no navegador. Permite:
 - Visualizar gráficos de evolução temporal
 - Baixar relatório PDF gerado na interface
 
+## Screenshots
+
+### Tela inicial
+
+![Tela inicial](docs/screenshots/01_tela_inicial.png)
+
+### Arquivo selecionado — pronto para processar
+
+![Arquivo selecionado](docs/screenshots/02a_arquivo_selecionado.png)
+
+### Aba Evolução por Exame
+
+Gráfico de linhas multi-exame ao longo do tempo, com filtro por nome e laboratório.
+
+![Evolução por Exame](docs/screenshots/03_evolucao.png)
+
+### Aba Tabela Completa
+
+Tabela pivô com todos os exames nas linhas e datas nas colunas.
+
+![Tabela Completa](docs/screenshots/04_tabela.png)
+
+### Aba Análise por Exame — Glicose (zonas clínicas)
+
+Gráfico individual com faixas coloridas de risco (Normal, Pré-diabético, Diabético).
+
+![Análise Glicose](docs/screenshots/06_analise_glicose.png)
+
+### Aba Análise por Exame — LDL-Colesterol
+
+Zonas Desejável e Limítrofe sobrepostas ao histórico de medições.
+
+![Análise LDL](docs/screenshots/07_analise_ldl.png)
+
 ## Estrutura do projeto
 
 ```
