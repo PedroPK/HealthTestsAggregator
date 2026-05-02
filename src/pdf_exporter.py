@@ -30,24 +30,12 @@ BORDER_COLOR = colors.HexColor("#aaccee")
 TEXT_COLOR = colors.HexColor("#1a1a1a")
 
 
-def generate_pdf_report(df: pd.DataFrame, output_path: str | Path) -> Path:
-    """
-    Generate a consolidated PDF report from a flat exam DataFrame.
-
-    Args:
-        df: The aggregated DataFrame from aggregator.build_dataframe()
-        output_path: Where to save the PDF
-
-    Returns:
-        Path to the generated PDF
-    """
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
+def _build_pdf(df: pd.DataFrame, dest) -> None:
+    """Build PDF content and write to dest (file path string or BytesIO)."""
     pivot = pivot_table(df)
 
     doc = SimpleDocTemplate(
-        str(output_path),
+        dest,
         pagesize=landscape(A4),
         leftMargin=1.5 * cm,
         rightMargin=1.5 * cm,
@@ -94,7 +82,7 @@ def generate_pdf_report(df: pd.DataFrame, output_path: str | Path) -> Path:
     if pivot.empty:
         story.append(Paragraph("Nenhum dado encontrado.", styles["Normal"]))
         doc.build(story)
-        return output_path
+        return
 
     # Build table data
     date_cols = list(pivot.columns)
@@ -153,4 +141,33 @@ def generate_pdf_report(df: pd.DataFrame, output_path: str | Path) -> Path:
     ))
 
     doc.build(story)
+
+
+def generate_pdf_bytes(df: pd.DataFrame) -> bytes:
+    """
+    Generate a consolidated PDF report entirely in memory.
+
+    Returns:
+        PDF content as bytes — never written to disk.
+    """
+    import io
+    buf = io.BytesIO()
+    _build_pdf(df, buf)
+    return buf.getvalue()
+
+
+def generate_pdf_report(df: pd.DataFrame, output_path: str | Path) -> Path:
+    """
+    Generate a consolidated PDF report saved to disk.
+
+    Args:
+        df: The aggregated DataFrame from aggregator.build_dataframe()
+        output_path: Where to save the PDF
+
+    Returns:
+        Path to the generated PDF
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    _build_pdf(df, str(output_path))
     return output_path

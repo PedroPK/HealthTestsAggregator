@@ -19,6 +19,21 @@ Ferramenta CLI e dashboard interativo para consolidar e visualizar histórico de
 | Laboratório Marcelo Magalhães | Laudos individuais por exame |
 | Hemograma tabular | Formato `NOME_EXAME : VALOR UNIDADE REF` |
 
+## Segurança e Privacidade
+
+Esta aplicação foi projetada para lidar com dados médicos sensíveis (dados de saúde são dados sensíveis pela LGPD, Art. 11):
+
+| Proteção | Detalhe |
+|---|---|
+| **Sem persistência de arquivos** | PDFs e ZIPs enviados são processados inteiramente em memória (`io.BytesIO`) e descartados ao fim da sessão |
+| **Exportações em memória** | O PDF consolidado é gerado em RAM e entregue diretamente ao navegador, sem gravar em disco |
+| **Limite de upload** | Arquivos acima de 50 MB são rejeitados antes do processamento |
+| **Transporte criptografado** | Em produção (Streamlit Cloud), todo tráfego usa HTTPS/TLS obrigatório |
+| **Isolamento por sessão** | `st.session_state` é isolado por sessão de usuário; dados de um usuário não são visíveis a outros |
+| **Sanitização de paths** | Nomes de arquivos dentro de ZIPs são sanitizados com `Path(...).name` para prevenir path traversal |
+
+> Como nenhum dado é persistido, fechar a aba é suficiente para eliminar todos os dados da sessão.
+
 ## Instalação
 
 **Requisitos:** Python 3.10+

@@ -6,6 +6,21 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.3.0] — 2026-05-01
+
+### Segurança
+- **Processamento 100% em memória**: arquivos enviados pelo dashboard nunca são gravados em disco; o pipeline de upload passou de `tempfile.NamedTemporaryFile` para `io.BytesIO` puro, eliminando qualquer rastro em sistema de arquivos
+- **Exportação PDF sem persistência**: `generate_pdf_bytes()` adicionado ao `pdf_exporter.py`; o dashboard gera e disponibiliza o PDF diretamente via `st.download_button` sem escrever em `output/`
+- **Limite de tamanho de upload**: arquivos acima de 50 MB são rejeitados antes do processamento, prevenindo esgotamento de memória
+- **Aviso de privacidade na UI**: mensagem exibida no painel lateral informando que nenhum dado é salvo no servidor
+- **Proteção contra path traversal** preservada: nomes de entradas de ZIP continuam sanitizados com `Path(...).name`
+
+### Alterado
+- `src/pdf_exporter.py`: lógica de construção do PDF extraída para `_build_pdf(df, dest)` interno; `generate_pdf_report` e o novo `generate_pdf_bytes` delegam para ele
+- `src/dashboard.py`: bloco de upload refatorado; removidas importações de `tempfile` e `os`
+
+---
+
 ## [0.2.0] — 2026-04-29
 
 ### Adicionado

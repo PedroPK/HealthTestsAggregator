@@ -18,7 +18,7 @@ import plotly.express as px
 
 from src.parser import parse_input
 from src.aggregator import build_dataframe, pivot_table, list_exams
-from src.pdf_exporter import generate_pdf_report
+from src.pdf_exporter import generate_pdf_report, generate_pdf_bytes
 from src.reference import load_references, get_reference
 
 # ---------------------------------------------------------------------------
@@ -63,63 +63,55 @@ with st.sidebar:
         accept_multiple_files=True,
     )
 
+    st.caption(
+        "🔒 Arquivos processados inteiramente em memória e descartados ao "
+        "encerrar a sessão. Nenhum dado é salvo no servidor."
+    )
+
     if uploaded_files and st.button("🔍 Processar", use_container_width=True):
-        import tempfile, os, zipfile as _zipfile
+        import io as _io, zipfile as _zipfile
         from src.parser import parse_pdf_bytes
 
-        # Expand uploaded files: ZIPs count as multiple PDFs
-        tasks = []  # list of (label, callable → list[ParsedDocument])
-        tmp_paths = []
+        MAX_UPLOAD_MB = 50
+
+        # Validate file sizes before any processing
         for uf in uploaded_files:
-            suffix = Path(uf.name).suffix.lower()
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                tmp.write(uf.read())
-                tmp_path = tmp.name
-            tmp_paths.append(tmp_path)
-            if suffix == ".zip":
-                with _zipfile.ZipFile(tmp_path, "r") as zf:
-                    pdf_entries = [
-                        info for info in zf.infolist()
-                        if info.filename.lower().endswith(".pdf")
-                    ]
-                for info in pdf_entries:
-                    fname = Path(info.filename).name
-                    tasks.append((fname, tmp_path, info.filename))
+            if uf.size > MAX_UPLOAD_MB * 1024 * 1024:
+                st.error(
+                    f"❌ '{uf.name}' excede o limite de {MAX_UPLOAD_MB} MB. "
+                    "Reduza o tamanho do arquivo e tente novamente."
+                )
+                st.stop()
+
+        # Expand uploaded files into (label, pdf_bytes) pairs — entirely in memory
+        tasks: list[tuple[str, bytes]] = []
+        for uf in uploaded_files:
+            raw = uf.read()
+            if uf.name.lower().endswith(".zip"):
+                with _zipfile.ZipFile(_io.BytesIO(raw)) as zf:
+                    for entry in zf.infolist():
+                        if entry.filename.lower().endswith(".pdf"):
+                            fname = Path(entry.filename).name
+                            tasks.append((fname, zf.read(entry.filename)))
             else:
-                tasks.append((uf.name, tmp_path, None))
+                tasks.append((uf.name, raw))
 
         status_text = st.empty()
         progress_bar = st.progress(0)
         all_docs = []
         n = len(tasks)
 
-        try:
-            for i, task in enumerate(tasks):
-                label, tmp_path, zip_entry = task
-                pct = int(i / n * 100)
-                status_text.markdown(
-                    f"Extraindo dados dos PDFs... **{pct}%** &nbsp;·&nbsp; `{label}`"
-                )
-                progress_bar.progress(pct)
+        for i, (label, pdf_bytes) in enumerate(tasks):
+            pct = int(i / n * 100)
+            status_text.markdown(
+                f"Extraindo dados dos PDFs... **{pct}%** &nbsp;·&nbsp; `{label}`"
+            )
+            progress_bar.progress(pct)
+            doc = parse_pdf_bytes(pdf_bytes, label)
+            all_docs.append(doc)
 
-                if zip_entry is not None:
-                    with _zipfile.ZipFile(tmp_path, "r") as zf:
-                        pdf_bytes = zf.read(zip_entry)
-                    doc = parse_pdf_bytes(pdf_bytes, label)
-                    all_docs.append(doc)
-                else:
-                    from src.parser import parse_pdf_file
-                    all_docs.append(parse_pdf_file(tmp_path))
-
-            progress_bar.progress(100)
-            status_text.markdown("Extraindo dados dos PDFs... **100%**")
-        finally:
-            for p in tmp_paths:
-                try:
-                    os.unlink(p)
-                except OSError:
-                    pass
-
+        progress_bar.progress(100)
+        status_text.markdown("Extraindo dados dos PDFs... **100%**")
         progress_bar.empty()
         status_text.empty()
 
@@ -144,17 +136,14 @@ with st.sidebar:
 
         if st.button("📄 Gerar PDF Consolidado", use_container_width=True):
             with st.spinner("Gerando PDF..."):
-                from pathlib import Path
-                out = Path("output") / "historico_exames.pdf"
-                generate_pdf_report(st.session_state.df, out)
-            with open(out, "rb") as f:
-                st.download_button(
-                    "⬇️ Baixar PDF",
-                    f,
-                    file_name="historico_exames.pdf",
-                    mime="application/pdf",
-                    use_container_width=True,
-                )
+                pdf_data = generate_pdf_bytes(st.session_state.df)
+            st.download_button(
+                "⬇️ Baixar PDF",
+                pdf_data,
+                file_name="historico_exames.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
 
         # Excel export
         pivot = pivot_table(st.session_state.df)
